@@ -141,45 +141,45 @@ const BANNED_WORDS = [
 const BANNED_WORDS_RE = new RegExp('\\b(' + BANNED_WORDS.join('|') + ')\\b', 'i');
 function containsProfanity(text) { return BANNED_WORDS_RE.test(text); }
 
-// ================= InstaAI (OpenAI-backed) =================
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+// ================= InstaAI (Gemini-backed) =================
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const AI_SYSTEM_PROMPT = 'You are InstaAI, a friendly, concise built-in assistant inside the InstaChat app. Keep replies helpful and conversational, and not overly long unless the user asks for detail.';
 const AI_HISTORY_LIMIT = 40; // messages (user+assistant combined) kept per connection
 
 async function getAIReply(ws, text) {
   ws.aiHistory = ws.aiHistory || [];
-  ws.aiHistory.push({ role: 'user', content: text });
+  ws.aiHistory.push({ role: 'user', parts: [{ text }] });
   if (ws.aiHistory.length > AI_HISTORY_LIMIT) ws.aiHistory = ws.aiHistory.slice(-AI_HISTORY_LIMIT);
 
-  if (!OPENAI_API_KEY) {
-    return { text: "InstaAI isn't set up yet — ask whoever runs this server to add an OPENAI_API_KEY environment variable.", error: true };
+  if (!GEMINI_API_KEY) {
+    return { text: "InstaAI isn't set up yet — ask whoever runs this server to add a GEMINI_API_KEY environment variable.", error: true };
   }
 
   try {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + OPENAI_API_KEY
-      },
-      body: JSON.stringify({
-        model: AI_MODEL,
-        max_tokens: 1024,
-        messages: [
-          { role: 'system', content: AI_SYSTEM_PROMPT },
-          ...ws.aiHistory
-        ]
-      })
-    });
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + AI_MODEL + ':generateContent?key=' + GEMINI_API_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
+          contents: ws.aiHistory
+        })
+      }
+    );
     if (!resp.ok) {
       const errBody = await resp.text().catch(() => '');
-      console.error('OpenAI API error', resp.status, errBody);
+      console.error('Gemini API error', resp.status, errBody);
       return { text: 'InstaAI had trouble responding just now — try again in a moment.', error: true };
     }
     const data = await resp.json();
-    const replyText = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').trim() || '…';
-    ws.aiHistory.push({ role: 'assistant', content: replyText });
+    const candidate = data.candidates && data.candidates[0];
+    const replyText = (candidate && candidate.content && candidate.content.parts || [])
+      .map(p => p.text || '')
+      .join('')
+      .trim() || '…';
+    ws.aiHistory.push({ role: 'model', parts: [{ text: replyText }] });
     if (ws.aiHistory.length > AI_HISTORY_LIMIT) ws.aiHistory = ws.aiHistory.slice(-AI_HISTORY_LIMIT);
     return { text: replyText, error: false };
   } catch (e) {
