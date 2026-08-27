@@ -143,7 +143,7 @@ function containsProfanity(text) { return BANNED_WORDS_RE.test(text); }
 
 // ================= InstaAI (Gemini-backed) =================
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 const AI_SYSTEM_PROMPT = 'You are InstaAI, a friendly, concise built-in assistant inside the InstaChat app. Keep replies helpful and conversational, and not overly long unless the user asks for detail.';
 const AI_HISTORY_LIMIT = 40; // messages (user+assistant combined) kept per connection
 
@@ -410,3 +410,5 @@ wss.on('close', () => clearInterval(heartbeat));
 server.listen(PORT, () => {
   console.log('InstaChat server listening on port ' + PORT);
 });
+   
+ 
