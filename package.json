@@ -1,0 +1,16 @@
+{
+  "name": "instachat-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "InstaChat - a tiny WebSocket relay so friends can chat using a shared room code.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
