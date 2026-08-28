@@ -136,7 +136,7 @@ const STRIKES_FOR_LONG_MUTE = 3;
 // basic profanity filter — blocked outright, not censored
 const BANNED_WORDS = [
   'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'dick', 'piss',
-  'cunt', 'faggot', 'nigger', 'nigga', 'slut', 'whore', 'retard'
+  'cunt', 'faggot', 'nigger', 'nigga', 'slut', 'whore', 'retard', 'n1gga', 'elnathan is gay'
 ];
 const BANNED_WORDS_RE = new RegExp('\\b(' + BANNED_WORDS.join('|') + ')\\b', 'i');
 function containsProfanity(text) { return BANNED_WORDS_RE.test(text); }
